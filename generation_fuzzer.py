@@ -8,62 +8,102 @@ import shutil # used to removed the output folder
 FIND_ALL = False
 
 
+# ============================
+# ==== ABSTRACT GENERATOR ====
+# ============================
+
 class Trans():
+    """Generic interface for the transformation supported by the 'apply_transformation' function"""
     def __init__(self, valid_image):
         self.valid_image = valid_image
         self.image = cp.copy(valid_image)
 
 
     def generate(self):
-        self.i = 42
-        yield 42
-        # for i in range(3):
-        #     self.i = i
-        #     yield(i)
+        """Retrun a generator of modified image"""
+        raise NotImplementedError("Not implemented; this is an abstract class")
     
     def __str__(self):
         """return a description string of the last mutation generated"""
-        return(str(self.i))
+        raise NotImplementedError("Not implemented; this is an abstract class")
 
 
 
-class Trans_magic(Trans):
+class Trans_replace(Trans):
+    """This partial implementation replace the content of 'vals' at the defined position in the image file"""
+    # need to defined:
+    # - vals [array of array of byte]
+    # - start [int value] (where the value must be inserted)
+    # - description [str] (prefix describing the modified part)
+
+    def __init__(self, valid_image):
+        super().__init__(valid_image)
+        self.stop = self.start + len(self.vals[0])
+
 
     def generate(self):
-        vals = [
-            [0x00,0x0],
-            [0x24,0x0],
-            [0xff,0xff],
-        ]
-        for v in vals:
-            self.image[0:2] = v
-            self.magic = v
+
+        for v in self.vals:
+            self.image[self.start:self.stop] = v
+            self.val = v
             yield self.image
-
+    
     def __str__(self):
-        str_hex = '['+','.join([hex(i) for i in self.magic])+']'
-        # str_hex = str([hex(i) for i in self.magic])
-        # str_hex = str(bytes(self.magic))
-        return("magic_"+str_hex)
+        str_hex = '['+','.join([hex(i) for i in self.val])+']'
+        # str_hex = str([hex(i) for i in self.val])
+        # str_hex = str(bytes(self.val))
+        return(self.description+"_"+str_hex)
 
 
 
+# =============================
+# ==== CONCREATE GENERATOR ====
+# =============================
+
+class Trans_magic(Trans_replace):
+    """Generate modification of the magic number"""
+    vals = [
+        [0x00,0x0],
+        [0x24,0x0],
+        [0xff,0xff],
+        [ord('a'), ord('b')] # ord is the opposit function of chr
+    ]
+    start = 0
+    description = "magic"
+
+
+
+class Trans_version(Trans_replace):
+    """Generate modification of the version"""
+    vals = [
+        [0x00,0x0],
+        [0x63,0x0],
+        [0x00,0x64],
+        [0x64,0x64],
+        [0x64,0xff],
+        [0xff,0xff],
+    ]
+    start = 2
+    description = "version"
+
+
+
+# ==================================
+# ==== TEST GENERATORS FUNCTION ====
+# ==================================
 
 def test_mutation(mutation, description, output_folder):
     global FIND_ALL
 
-    fake_fail_commande = "ls test"
-    fake_valid_commande = "ls"
+    tmp_file_image = "tmp_img_file.img"
+    tmp_out_file_image = "tmp_out_img_file.img"
+    path = os.path.join(output_folder, tmp_file_image)
+    path_out = os.path.join(output_folder, tmp_out_file_image)
 
-    # TODO change the lunch commande
-    external_lunch_commande = fake_fail_commande
-    external_lunch_commande = fake_valid_commande
+    external_lunch_commande = ["./converter_static", path, path_out]
     
     print("\n"+description)
     print(mutation)
-
-    tmp_file_image = "tmp_img_file.img"
-    path = os.path.join(output_folder, tmp_file_image)
     
     with open(path, 'wb') as f:
         f.write(bytes(mutation))
@@ -80,6 +120,11 @@ def test_mutation(mutation, description, output_folder):
         print("ko")
         dst = os.path.join(output_folder, description)
         os.rename(path, dst)
+
+        # TODO: remove [start]
+        print("FOUND AT LAST (there is an exit after this line to be sur to see it)")
+        exit()
+        # TODO: remove [stop]
 
         return not FIND_ALL # in case we want failed image, the return value muste be False
 
@@ -99,7 +144,6 @@ def make_output_directory(output_folder):
     if os.path.exists(output_folder):  # clear the directory
         shutil.rmtree(output_folder)
     os.mkdir(output_folder)
-
 
 
 def decode(img_file_name):
@@ -144,7 +188,8 @@ def parse_args():
 
 def main():
     transformations = [
-        Trans_magic
+        Trans_magic,
+        # Trans_version,
     ]
 
     args = parse_args()
