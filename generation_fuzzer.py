@@ -31,6 +31,20 @@ class Trans():
         """Convert a string in exadecimal to an array of bytes"""
         return list(binascii.unhexlify(s))
 
+    def int_to_hex(self, i):
+        """Convert an integer to string of the heximal representation in little endian"""
+        i_hex = str(hex(i))[2:]
+        i_str = "0"*(8-len(i_hex)) + i_hex
+        i_lst = list(i_str)
+
+        # change the endianess
+        for a in range(2):
+            tmp = i_lst[2*a:2*a+2]
+            i_lst[2*a:2*a+2] = i_lst[6-2*a:8-2*a]
+            i_lst[6-2*a:8-2*a] = tmp
+
+        return "".join(i_lst)
+        
 
 
 class Trans_replace(Trans):
@@ -259,6 +273,38 @@ class Out_of_range_color_index(Trans):
 
 
 
+class Many_colors(Trans):
+    """Generate a valid image with a long color table"""
+
+    def generate(self):
+        nb_colors = [64, 1024]
+
+        for nb_c in nb_colors:
+            self.val = nb_c
+            nb_c_hex = self.int_to_hex(nb_c)
+            yield self.to_bytes_array("abcd64006d65000200000002000000"+nb_c_hex+("ffffff00"*nb_c)+"ffffff0000020100")
+
+    def __str__(self):
+        return "many_colors_"+str(self.val)
+
+
+
+class Many_pixels(Trans):
+    """Generate valid image with a lot of pixels"""
+
+    def generate(self):
+        widht_heights = [64, 1024, 20_000]
+
+        for d in widht_heights:
+            self.val = d
+            d_hex = self.int_to_hex(d)
+            yield self.to_bytes_array("abcd64006d6500"+d_hex+d_hex+"0200000000000000ffffff00"+(d**2 * "01"))
+
+    def __str__(self):
+        return "many_pixels_"+str(self.val)+"**2"
+
+
+
 # ==================================
 # ==== TEST GENERATORS FUNCTION ====
 # ==================================
@@ -363,6 +409,8 @@ def main():
         No_pixels_some_colors,
         No_pixels_no_colors,
         Out_of_range_color_index,
+        Many_colors,
+        Many_pixels,
     ]
 
     args = parse_args()
