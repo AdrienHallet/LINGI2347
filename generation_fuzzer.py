@@ -27,6 +27,10 @@ class Trans():
         """return a description string of the last mutation generated"""
         raise NotImplementedError("Not implemented; this is an abstract class")
 
+    def to_bytes_array(self, s):
+        """Convert a string in exadecimal to an array of bytes"""
+        return list(binascii.unhexlify(s))
+
 
 
 class Trans_replace(Trans):
@@ -88,6 +92,107 @@ class Trans_version(Trans_replace):
 
 
 
+class Trans_width(Trans_replace):
+    """Generate modification of the width"""
+    # the real value is 0x10, 0x00, 0x00, 0x00
+    vals = [
+        [0x00, 0x00, 0x00, 0x00],
+        [0x10, 0x01, 0x00, 0x00],
+        [0x10, 0x00, 0x01, 0x00],
+        [0x10, 0x00, 0x00, 0x01],
+        [0xff, 0xff, 0xff, 0xff],
+        [0xf0, 0xff, 0xff, 0xff], # negative value of the real value (in Two's complement system)
+    ]
+    start = 8
+    description = "width"
+
+
+
+class Trans_height(Trans_replace):
+    """Generate modification of the width"""
+    # the real value is 0x10, 0x00, 0x00, 0x00
+    vals = [
+        [0x00, 0x00, 0x00, 0x00],
+        [0x10, 0x01, 0x00, 0x00],
+        [0x10, 0x00, 0x01, 0x00],
+        [0x10, 0x00, 0x00, 0x01],
+        [0xff, 0xff, 0xff, 0xff],
+        [0xf0, 0xff, 0xff, 0xff], # negative value of the real value (in Two's complement system)
+    ]
+    start = 12
+    description = "height"
+
+
+
+class Trans_numcolors(Trans_replace):
+    """Generate modification of the width"""
+    # the real value is 0x04, 0x00, 0x00, 0x00
+    vals = [
+        [0x00, 0x00, 0x00, 0x00],
+        [0x0a, 0x00, 0x00, 0x00],
+        [0xff, 0xff, 0xff, 0xff],
+        [0xfc, 0xff, 0xff, 0xff], # negative value of the real value (in Two's complement system)
+    ]
+    start = 16
+    description = "numcolors"
+
+
+
+class Basic(Trans):
+    """Generate a valide image with with no trap"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd64006d650002000000020000000200000000000000ffffff0000010100")
+
+    def __str__(self):
+        return "basic"
+
+
+
+class Empty_author_name(Trans):
+    """Generate a valid image with the author field empty"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd64000002000000020000000200000000000000ffffff0000010100")
+
+    def __str__(self):
+        return "empty_author"
+
+
+
+class No_pixels_some_colors(Trans):
+    """Generate a valid image with no pixels and some colors defined"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd64006d650000000000000000000200000000000000ffffff00")
+
+    def __str__(self):
+        return "no_pixels_some_colors"
+
+
+
+class No_pixels_no_colors(Trans):
+    """Generate a valid image with no pixels and no colors defined"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd64006d6500000000000000000000000000")
+
+    def __str__(self):
+        return "no_pixels_no_colors"
+
+
+
+class Out_of_range_color_index(Trans):
+    """Generate an image with a pixel color out of range"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd64006d650002000000020000000200000000000000ffffff0000020100")
+
+    def __str__(self):
+        return "out_of_range_color_index"
+
+
+
 # ==================================
 # ==== TEST GENERATORS FUNCTION ====
 # ==================================
@@ -109,11 +214,11 @@ def test_mutation(mutation, description, output_folder):
         f.write(bytes(mutation))
 
     return_val  = call(external_lunch_commande)
-    print(return_val)
+    # print(return_val)
 
     if return_val == 0:
         print("ok")
-        os.remove(path)
+        # os.remove(path)
 
         return False
     else:
@@ -151,26 +256,15 @@ def decode(img_file_name):
     with open(img_file_name, 'rb') as f:
         content = f.read()
 
-
         print("original:")
         print(content)
         # byte_str_hex = binascii.hexlify(content) # allow to have a visual way to see the content
         # str_hex = byte_str_hex.decode("utf-8")
         # print(str_hex)
 
-        print("\noriginal in hex:")
-        print(content)
         array_hex = list(content)
 
         return(array_hex)
-
-        # array_hex[0:2] = [0x00,0x00]
-        # print("\nTransformed:")
-        # print(array_hex)
-        # print("\back to original format 2:")
-        # array_hex_2 = bytes(array_hex)
-        # print(array_hex_2)
-        # exit()
 
 
 def parse_args():
@@ -189,7 +283,15 @@ def parse_args():
 def main():
     transformations = [
         Trans_magic,
-        # Trans_version,
+        Trans_version,
+        Trans_width,
+        Trans_height,
+        Trans_numcolors,
+        Basic,
+        Empty_author_name,
+        No_pixels_some_colors,
+        No_pixels_no_colors,
+        Out_of_range_color_index,
     ]
 
     args = parse_args()
