@@ -160,6 +160,72 @@ class Empty_author_name(Trans):
 
 
 
+class Long_author_name(Trans):
+    """Generate a valid image with the author name very long 260 characters"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd6400beefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ff0002000000020000000200000000000000ffffff0000010100")
+
+    def __str__(self):
+        return "long_author"
+
+
+
+class Long_author_name(Trans):
+    """Generate a valid image with the author name very long 64 bytes"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd6400"+("aa"*64)+"0002000000020000000200000000000000ffffff0000010100")
+
+    def __str__(self):
+        return "long_author"
+
+
+class Long_long_author_name(Trans):
+    """Generate a valid image with the author name very long 1024 bytes"""
+    # make crash
+
+    def generate(self):
+        yield self.to_bytes_array("abcd6400"+("aa"*1024)+"0002000000020000000200000000000000ffffff0000010100")
+
+    def __str__(self):
+        return "long_long_author"
+
+
+
+class Just_author_name(Trans):
+    """Generate the begining of an image untill the author name"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd6400beef")
+
+    def __str__(self):
+        return "just_author"
+
+
+
+class Just_author_name_w_end(Trans):
+    """Generate the begining of an image untill the author name with the 00 at the end"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd6400beef00")
+
+    def __str__(self):
+        return "just_author_w_end"
+
+
+
+class One_pixels_some_colors(Trans):
+    """Generate a valid image with one pixels and some colors defined"""
+
+    def generate(self):
+        yield self.to_bytes_array("abcd64006d650001000000010000000200000000000000ffffff0001")
+
+    def __str__(self):
+        return "one_pixels_some_colors"
+
+
+
 class No_pixels_some_colors(Trans):
     """Generate a valid image with no pixels and some colors defined"""
 
@@ -289,6 +355,11 @@ def main():
         Trans_numcolors,
         Basic,
         Empty_author_name,
+        Long_author_name,
+        Long_long_author_name, # make crash !!
+        Just_author_name,
+        Just_author_name_w_end,
+        One_pixels_some_colors,
         No_pixels_some_colors,
         No_pixels_no_colors,
         Out_of_range_color_index,
