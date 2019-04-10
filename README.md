@@ -12,4 +12,4 @@ This project contains two scripts to fuzz either with mutation or generation. To
 
 
 ### Bad inputs
-ToDo
+* failing_version.img : fails from versions 20 to 29 (decimal, included) 
