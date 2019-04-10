@@ -28,11 +28,11 @@ class Trans():
         raise NotImplementedError("Not implemented; this is an abstract class")
 
     def to_bytes_array(self, s):
-        """Convert a string in exadecimal to an array of bytes"""
+        """Convert a string in hexadecimal to an array of bytes"""
         return list(binascii.unhexlify(s))
 
     def int_to_hex(self, i):
-        """Convert an integer to string of the heximal representation in little endian"""
+        """Convert an integer to string of the hexadecimal representation in little endian"""
         i_hex = str(hex(i))[2:]
         i_str = "0"*(8-len(i_hex)) + i_hex
         i_lst = list(i_str)
@@ -208,7 +208,7 @@ class Long_long_author_name(Trans):
 
 
 class Just_author_name(Trans):
-    """Generate the begining of an image untill the author name"""
+    """Generate the beginning of an image until the author name"""
 
     def generate(self):
         yield self.to_bytes_array("abcd6400beef")
@@ -219,7 +219,7 @@ class Just_author_name(Trans):
 
 
 class Just_author_name_w_end(Trans):
-    """Generate the begining of an image untill the author name with the 00 at the end"""
+    """Generate the beginning of an image until the author name with the 00 at the end"""
 
     def generate(self):
         yield self.to_bytes_array("abcd6400beef00")
@@ -382,10 +382,10 @@ def decode(img_file_name):
 def parse_args():
     """Parse the input argument of the program"""
     parser = argparse.ArgumentParser(
-        description='Take as input a valide image and apply on it small transformation to test the program "converter"')
+        description='Take as input a valid image and apply on it small transformation to test the program "converter"')
 
     parser.add_argument('-i', '--input', required=True, metavar='I', nargs=1,
-                        help='input  valide image file')
+                        help='input  valid image file')
     parser.add_argument('-o', '--output', metavar='O', nargs=1,
                         help='output folder')
     args = parser.parse_args()
