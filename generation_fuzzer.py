@@ -4,9 +4,61 @@ import copy as cp
 from subprocess import call
 import os
 import shutil # used to removed the output folder
+import numpy as np # used for the two complement conversion
+from random import randint
 
-FIND_ALL = False
+FIND_ALL = True
 
+
+
+
+def big_to_little_endian(tab, group_by=2):
+    # change the endianess
+    l = len(tab)
+    for a in range(int(l/group_by/2)):
+        tmp = tab[group_by*a:group_by*a+group_by]
+        tab[group_by*a:group_by*a+group_by] = tab[l-group_by-group_by*a:l-group_by*a]
+        tab[l-group_by-group_by*a:l-group_by*a] = tmp
+    return tab
+
+
+def cut_by_piece_of(tab, piece_len):
+    return [tab[i*piece_len:(i+1)*piece_len] for i in range(int(len(tab)/piece_len))]
+
+def int_base2(i):
+    return int(i, base=2)
+
+def int_to_hex_str(i):
+    hex_str = str(hex(i))[2:]
+    hex_str_completed = '0' + hex_str if len(hex_str) == 1 else hex_str
+    return(hex_str_completed)
+
+
+def apply(tab, fn):
+    return [fn(e) for e in tab]
+
+
+def tc_int_to_hex_str(i):
+    """convert in the two complement system a signed integer into a string representation of the hex value"""
+    int_array = tc_int_to_int_array(i)
+    return "".join(apply(int_array, int_to_hex_str))
+
+
+def tc_int_to_int_array(i):
+    """"Return an array of four element representing in in the two complement system"""
+    binary_two_comp = np.binary_repr(i, width=32)
+    pieces = cut_by_piece_of(binary_two_comp, 8)
+    pieces_little = big_to_little_endian(pieces, group_by=1)
+    val_piece_little = apply(pieces_little, int_base2)
+
+    return val_piece_little
+
+def array_of_random_val(lenght):
+    v_min = -(2**31)
+    v_max = -v_min - 1
+    
+    t = [tc_int_to_int_array(randint(v_min, v_max)) for i in range(lenght)]
+    return t
 
 # ============================
 # ==== ABSTRACT GENERATOR ====
@@ -31,20 +83,6 @@ class Trans():
         """Convert a string in hexadecimal to an array of bytes"""
         return list(binascii.unhexlify(s))
 
-    def int_to_hex(self, i):
-        """Convert an integer to string of the hexadecimal representation in little endian"""
-        i_hex = str(hex(i))[2:]
-        i_str = "0"*(8-len(i_hex)) + i_hex
-        i_lst = list(i_str)
-
-        # change the endianess
-        for a in range(2):
-            tmp = i_lst[2*a:2*a+2]
-            i_lst[2*a:2*a+2] = i_lst[6-2*a:8-2*a]
-            i_lst[6-2*a:8-2*a] = tmp
-
-        return "".join(i_lst)
-        
 
 
 class Trans_replace(Trans):
@@ -105,6 +143,13 @@ class Trans_version(Trans_replace):
     description = "version"
 
 
+class Trans_version_range(Trans_replace):
+    """Generate modification of the version in a range of value from 0 to 105"""
+    # make crash for version from [20, 29]
+    vals = [tc_int_to_int_array(i)[:2] for i in range(0, 105)]
+    start = 2
+    description = "version"
+
 
 class Trans_width(Trans_replace):
     """Generate modification of the width"""
@@ -117,38 +162,74 @@ class Trans_width(Trans_replace):
         [0xff, 0xff, 0xff, 0xff],
         [0xf0, 0xff, 0xff, 0xff], # negative value of the real value (in Two's complement system)
     ]
-    start = 8
+    start = 10
+    description = "width"
+
+class Trans_width_rand(Trans_replace):
+    """Generate modification of the width randomly"""
+    # the real value is 0x10, 0x00, 0x00, 0x00
+    vals = array_of_random_val(200)
+    start = 10
     description = "width"
 
 
 
 class Trans_height(Trans_replace):
-    """Generate modification of the width"""
+    """Generate modification of the height"""
     # the real value is 0x10, 0x00, 0x00, 0x00
+    # make crash
     vals = [
         [0x00, 0x00, 0x00, 0x00],
         [0x10, 0x01, 0x00, 0x00],
         [0x10, 0x00, 0x01, 0x00],
         [0x10, 0x00, 0x00, 0x01],
-        [0xff, 0xff, 0xff, 0xff],
-        [0xf0, 0xff, 0xff, 0xff], # negative value of the real value (in Two's complement system)
+        [0xff, 0xff, 0xff, 0xff], # CRASH
+        [0xf0, 0xf0, 0xf0, 0xf0], # CRASH
+        [0xf0, 0xff, 0xff, 0xff], # CRASH, negative value of the real value (in Two's complement system)
     ]
-    start = 12
+    start = 14
     description = "height"
 
 
+class Trans_height_rand(Trans_replace):
+    """Generate modification of the height randomly"""
+    # the real value is 0x10, 0x00, 0x00, 0x00
+    vals = array_of_random_val(200)
+    start = 14
+    description = "height"
+
 
 class Trans_numcolors(Trans_replace):
-    """Generate modification of the width"""
+    """Generate modification of the lenght of the color table"""
     # the real value is 0x04, 0x00, 0x00, 0x00
+    # make crash
+    vals = [
+        [0x00, 0x00, 0x00, 0x00],
+        [0x0a, 0x00, 0x00, 0x00],
+        [0xff, 0xff, 0xff, 0xff], # CRASH
+        [0xf0, 0xf0, 0xf0, 0xf0], # CRASH
+        [0xfc, 0xff, 0xff, 0xff], # CRASH, negative value of the real value (in Two's complement system)
+    ]
+    # vals = array_of_random_val(200)
+    start = 18
+    description = "numcolors"
+
+
+class Trans_color_val(Trans_replace):
+    """Generate modification of a color value"""
+    # the real value is 0x00, 0x00, 0x00, 0x00
     vals = [
         [0x00, 0x00, 0x00, 0x00],
         [0x0a, 0x00, 0x00, 0x00],
         [0xff, 0xff, 0xff, 0xff],
-        [0xfc, 0xff, 0xff, 0xff], # negative value of the real value (in Two's complement system)
+        [0xf0, 0xf0, 0xf0, 0xf0],
+        [0xfc, 0xff, 0xff, 0xff],
     ]
-    start = 16
-    description = "numcolors"
+    vals = array_of_random_val(200)
+    # vals = [tc_int_to_int_array(i) for i in range(0, -10000, -100)]
+    # vals = [tc_int_to_int_array(0)]
+    start = 22
+    description = "color_val"
 
 
 
@@ -171,18 +252,6 @@ class Empty_author_name(Trans):
 
     def __str__(self):
         return "empty_author"
-
-
-
-class Long_author_name(Trans):
-    """Generate a valid image with the author name very long 260 characters"""
-
-    def generate(self):
-        yield self.to_bytes_array("abcd6400beefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ffbeefc0ded88dbadcafec8810ff0002000000020000000200000000000000ffffff0000010100")
-
-    def __str__(self):
-        return "long_author"
-
 
 
 class Long_author_name(Trans):
@@ -281,7 +350,7 @@ class Many_colors(Trans):
 
         for nb_c in nb_colors:
             self.val = nb_c
-            nb_c_hex = self.int_to_hex(nb_c)
+            nb_c_hex = tc_int_to_hex_str(nb_c)
             yield self.to_bytes_array("abcd64006d65000200000002000000"+nb_c_hex+("ffffff00"*nb_c)+"ffffff0000020100")
 
     def __str__(self):
@@ -293,11 +362,11 @@ class Many_pixels(Trans):
     """Generate valid image with a lot of pixels"""
 
     def generate(self):
-        widht_heights = [64, 1024, 20_000]
+        widht_heights = [64, 1024, 20*1000]
 
         for d in widht_heights:
             self.val = d
-            d_hex = self.int_to_hex(d)
+            d_hex = tc_int_to_hex_str(d)
             yield self.to_bytes_array("abcd64006d6500"+d_hex+d_hex+"0200000000000000ffffff00"+(d**2 * "01"))
 
     def __str__(self):
@@ -320,7 +389,7 @@ def test_mutation(mutation, description, output_folder):
     external_lunch_commande = ["./converter_static", path, path_out]
     
     print("\n"+description)
-    print(mutation)
+    # print(mutation)
     
     with open(path, 'wb') as f:
         f.write(bytes(mutation))
@@ -338,10 +407,10 @@ def test_mutation(mutation, description, output_folder):
         dst = os.path.join(output_folder, description)
         os.rename(path, dst)
 
-        # TODO: remove [start]
-        print("FOUND AT LAST (there is an exit after this line to be sur to see it)")
-        exit()
-        # TODO: remove [stop]
+        # # TODO: remove [start]
+        # print("FOUND AT LAST (there is an exit after this line to be sur to see it)")
+        # exit()
+        # # TODO: remove [stop]
 
         return not FIND_ALL # in case we want failed image, the return value muste be False
 
@@ -396,9 +465,13 @@ def main():
     transformations = [
         Trans_magic,
         Trans_version,
+        Trans_version_range, # crash
         Trans_width,
-        Trans_height,
-        Trans_numcolors,
+        Trans_width_rand,
+        Trans_height, # make crash
+        Trans_height_rand, # (make crash)
+        Trans_numcolors, # make crash
+        Trans_color_val,
         Basic,
         Empty_author_name,
         Long_author_name,
