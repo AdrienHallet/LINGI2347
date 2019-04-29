@@ -191,6 +191,18 @@ class Trans_height(Trans_replace):
     description = "height"
 
 
+class Trans_height_width(Trans_replace):
+    """Generate modification of the lenght of the color table"""
+    # the real value is 0x04, 0x00, 0x00, 0x00
+    # make crash
+    vals = [
+        [0x46, 0xEC, 0x00, 0x00, 0x10, 0x58, 0x00, 0x00]
+    ]
+    # vals = array_of_random_val(200)
+    start = 10
+    description = "height_rand"
+
+
 class Trans_height_rand(Trans_replace):
     """Generate modification of the height randomly"""
     # the real value is 0x10, 0x00, 0x00, 0x00
@@ -484,6 +496,7 @@ def main():
         Out_of_range_color_index,
         Many_colors,
         Many_pixels,
+        # Trans_height_width
     ]
 
     args = parse_args()
