@@ -9,25 +9,26 @@ parser.add_argument("correct_input", help="a correct input file that works with 
 parser.add_argument("test_runs", help="the amount of iterations that generates random input", type=int)
 parser.add_argument("max_mods", help="the amount of modifications to make on one file", type=int)
 parser.add_argument("factor", help="the mutation factor, from 0 to 1 in percentage", type=float)
-parser.add_argument("output_dir", help="the output dir to store mutated files")
+parser.add_argument("output_dir", default="mutated", help="the output dir to store mutated files")
 parser.add_argument("-v", "--verbose", help="output more things", action="store_true")
 
-# Fuzz the input to achieve crashes and log them
 def fuzz(args):
 	print('Starting to fuzz')
 	fail_counter = 0
 	for iteration in range(0, args.test_runs):
 		mutated_file_name = args.correct_input
-		# Generate mutations
+		# Generate one mutation batch (mutate each file from previous one)
 		for sub_iteration in range(0, args.max_mods):
 			mutated_file = mutate(read(mutated_file_name), args.factor)
 			mutated_file_name = "mutated"+str(iteration)+"_"+ str(sub_iteration) + ".img"
 			write(mutated_file, mutated_file_name)
+		# Test current batch mutation
 		for sub_iteration in range(0, args.max_mods):
 			mutated_file_name = "mutated"+str(iteration)+"_"+ str(sub_iteration) + ".img"
 			if test_input(mutated_file_name):
 				fail_counter += 1
 
+	# Store failing files in a folder for readability
 	if not os.path.exists("failed_inputs"):
 		os.mkdir("failed_inputs")
 	else:
@@ -36,9 +37,9 @@ def fuzz(args):
 	print('Generated {} files, {} of which failed the conversion'.format(args.test_runs*args.max_mods, fail_counter))
 
 
-# Mutate a file with given randomness factor
-# Mutation on add/suppress byte(s)
 def mutate(file, factor):
+	"""Mutate $factor% of bytes in the $file"""
+
 	file = bytearray(file)
 	mutations = len(file) * factor
 	if mutations is 0 and factor is not 0:
@@ -54,6 +55,7 @@ def mutate(file, factor):
 
 
 def test_input(file):
+	"""Check if $file crashes the converter or not"""
 	args = "./converter_static " + file + " test.img"
 	try:
 		result = subprocess.check_output(args, shell=True, stderr=subprocess.STDOUT) #Run the program
@@ -68,11 +70,13 @@ def test_input(file):
 
 
 def read(file):
+	"""Read a $file to memory"""
 	with open(file, 'rb') as f:
 		buffer = f.read()
 	return buffer
 
 def write(content, filename):
+	"""Write a $filename with $content to directory"""
 	with open(filename, 'wb') as f:
 		f.write(content)
 
