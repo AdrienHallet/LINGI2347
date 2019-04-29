@@ -56,7 +56,7 @@ def tc_int_to_int_array(i):
 def array_of_random_val(lenght):
     v_min = -(2**31)
     v_max = -v_min - 1
-    
+
     t = [tc_int_to_int_array(randint(v_min, v_max)) for i in range(lenght)]
     return t
 
@@ -74,7 +74,7 @@ class Trans():
     def generate(self):
         """Retrun a generator of modified image"""
         raise NotImplementedError("Not implemented; this is an abstract class")
-    
+
     def __str__(self):
         """return a description string of the last mutation generated"""
         raise NotImplementedError("Not implemented; this is an abstract class")
@@ -103,7 +103,7 @@ class Trans_replace(Trans):
             self.image[self.start:self.stop] = v
             self.val = v
             yield self.image
-    
+
     def __str__(self):
         str_hex = '['+','.join([hex(i) for i in self.val])+']'
         # str_hex = str([hex(i) for i in self.val])
@@ -192,15 +192,15 @@ class Trans_height(Trans_replace):
 
 
 class Trans_height_width(Trans_replace):
-    """Generate modification of the lenght of the color table"""
-    # the real value is 0x04, 0x00, 0x00, 0x00
+    """Generate modification of the combination of the height and the width"""
     # make crash
     vals = [
-        [0x46, 0xEC, 0x00, 0x00, 0x10, 0x58, 0x00, 0x00]
+        [0x46, 0xEC, 0x00, 0x00, 0x10, 0x58, 0x00, 0x00], # does not crash, but take a lot of time
+        [0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00] # CRASH
     ]
-    # vals = array_of_random_val(200)
+
     start = 10
-    description = "height_rand"
+    description = "height_width"
 
 
 class Trans_height_rand(Trans_replace):
@@ -399,10 +399,10 @@ def test_mutation(mutation, description, output_folder):
     path_out = os.path.join(output_folder, tmp_out_file_image)
 
     external_lunch_commande = ["./converter_static", path, path_out]
-    
+
     print("\n"+description)
     # print(mutation)
-    
+
     with open(path, 'wb') as f:
         f.write(bytes(mutation))
 
@@ -433,12 +433,12 @@ def apply_transformation(valid_image, trans_types, output_folder):
 
         for mutation in t.generate():
             stop = test_mutation(mutation, str(t), output_folder)
-            
+
             if stop:
                 break
 
 
-def make_output_directory(output_folder):  
+def make_output_directory(output_folder):
     if os.path.exists(output_folder):  # clear the directory
         shutil.rmtree(output_folder)
     os.mkdir(output_folder)
@@ -482,6 +482,7 @@ def main():
         Trans_width_rand,
         Trans_height, # make crash
         Trans_height_rand, # (make crash)
+        Trans_height_width, # make crash
         Trans_numcolors, # make crash
         Trans_color_val,
         Basic,
@@ -496,7 +497,6 @@ def main():
         Out_of_range_color_index,
         Many_colors,
         Many_pixels,
-        # Trans_height_width
     ]
 
     args = parse_args()
