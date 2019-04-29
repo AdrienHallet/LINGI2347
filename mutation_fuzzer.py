@@ -38,7 +38,8 @@ def fuzz(args):
 
 
 def mutate(file, factor):
-'''Mutate $factor% of bytes in the $file'''
+	"""Mutate $factor% of bytes in the $file"""
+
 	file = bytearray(file)
 	mutations = len(file) * factor
 	if mutations is 0 and factor is not 0:
@@ -54,7 +55,7 @@ def mutate(file, factor):
 
 
 def test_input(file):
-'''Check if $file crashes the converter or not'''
+	"""Check if $file crashes the converter or not"""
 	args = "./converter_static " + file + " test.img"
 	try:
 		result = subprocess.check_output(args, shell=True, stderr=subprocess.STDOUT) #Run the program
@@ -69,13 +70,13 @@ def test_input(file):
 
 
 def read(file):
-'''Read a $file to memory'''
+	"""Read a $file to memory"""
 	with open(file, 'rb') as f:
 		buffer = f.read()
 	return buffer
 
 def write(content, filename):
-'''Write a $filename with $content to directory'''
+	"""Write a $filename with $content to directory"""
 	with open(filename, 'wb') as f:
 		f.write(content)
 
