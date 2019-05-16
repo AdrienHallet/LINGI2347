@@ -1,0 +1,62 @@
+Groupwork 2
+-----------
+
+Procedure:
+1. Register your group on Moodle. Same group members as for the first group work.
+2. Download the pcap trace file corresponding to your group number. You can uncompress it with gunzip.
+3. Download this text file and answer the questions below.
+4. Upload your solution (i.e. this text file with your answers) to Moodle by
+   one member of your group.
+
+The pcap file contains the network traffic of a small company network with a few
+clients and servers. There are also hosts that access the company servers from
+outside (i.e. the Internet). The company network has a /16 address.
+
+Note that the pcap file does not contain useable packet payload and all IP addresses
+have been randomly generated. You should therefore focus on the packet headers.
+You are free to use whatever tool you like to analyze the pcap file. Wireshark
+might be a good choice if you are not familar with command line tools.
+
+===================================================================
+Questions
+===================================================================
+
+0) What is your group number and who are the group members?
+   Group number: 18
+   Group members: Gellens Arnaud, Hallet Adrien
+
+a) What is the /16 address (e.g. 1.2.0.0) of the company network?
+   Your answer: 162.205.0.0
+
+b) There are 7 hosts in the company network. Write below their addresses
+   and their function, for example "1.2.3.4   Mail server".
+   Your answer:
+	162.205.1.37	Web Server
+	162.205.4.25	DNS Server
+	162.205.16.57	DNS Server
+	162.205.108.163	Company device (user)
+	162.205.171.243	Company device (user)
+	162.205.204.117	Company device (user)
+	162.205.219.147	Web Server
+
+c) There are several hosts in the trace that try to attack the company.
+   However, there are also two external hosts that access the company's
+   servers in a (probably) legitimate way. Give the IP addresses of those
+   two benign hosts.
+   Your answer:
+	94.121.20.201
+	106.30.208.26
+	
+
+d) There are two network attacks in the trace. Give for the first attack the
+   following information:
+	1. dDoS with spoofing and amplified with DNS requests
+	2. 79 hosts
+	3. 261.964 seconds
+	4. 93846
+
+e) Give the same information as in question d) for the second attack:
+	1. TCP RST Flood on web server
+	2. 539
+	3. 217.533 sconds
+	4. 2161
