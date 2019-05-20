@@ -57,6 +57,6 @@ d) There are two network attacks in the trace. Give for the first attack the
 
 e) Give the same information as in question d) for the second attack:
 	1. TCP RST Flood on web server
-	2. 539
-	3. 217.533 sconds
-	4. 2161
+	2. 321 hosts
+	3. 217.533 seconds
+	4. 3521 packets
