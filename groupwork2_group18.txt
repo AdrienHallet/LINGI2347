@@ -53,7 +53,7 @@ d) There are two network attacks in the trace. Give for the first attack the
 	1. dDoS with spoofing and amplified with DNS requests
 	2. 79 hosts
 	3. 261.964 seconds
-	4. 93846
+	4. 95022 packets
 
 e) Give the same information as in question d) for the second attack:
 	1. TCP RST Flood on web server
